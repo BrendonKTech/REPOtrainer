@@ -1,0 +1,9 @@
+bin/
+obj/
+.vs/
+.vscode/
+*.user
+
+# local only
+Directory.Build.props
+NOTES.md
