@@ -1,163 +1,136 @@
 using BepInEx;
 using BepInEx.Configuration;
-using HarmonyLib;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 namespace REPOItemESP
 {
     [BepInPlugin(PluginGuid, PluginName, PluginVersion)]
-    public class Plugin : BaseUnityPlugin
+    public partial class Plugin : BaseUnityPlugin
     {
         public const string PluginGuid = "BrendonKTech.repo.itemesp";
         public const string PluginName = "REPO Item ESP";
-        public const string PluginVersion = "1.0.0";
+        public const string PluginVersion = "1.1.0";
 
-        private static readonly AccessTools.FieldRef<ValuableObject, float> ValueRef =
-            AccessTools.FieldRefAccess<ValuableObject, float>("dollarValueCurrent");
-        private static readonly AccessTools.FieldRef<EnemyParent, bool> SpawnedRef =
-            AccessTools.FieldRefAccess<EnemyParent, bool>("Spawned");
-        private static readonly AccessTools.FieldRef<EnemyParent, Enemy> EnemyRef =
-            AccessTools.FieldRefAccess<EnemyParent, Enemy>("Enemy");
-
+        private ConfigEntry<Key> menuKey;
         private ConfigEntry<Key> toggleKey;
+
         private ConfigEntry<bool> showItems;
-        private ConfigEntry<bool> showEnemies;
-        private ConfigEntry<float> maxDistance;
+        private ConfigEntry<bool> colorByValue;
+        private ConfigEntry<bool> showFragile;
         private ConfigEntry<int> minItemValue;
+        private ConfigEntry<float> fragileThreshold;
+
+        private ConfigEntry<bool> showEnemies;
+        private ConfigEntry<bool> showEnemyHealth;
+        private ConfigEntry<bool> showEnemyTips;
+        private ConfigEntry<bool> offscreenArrows;
+        private ConfigEntry<bool> dangerWarning;
+        private ConfigEntry<float> dangerDistance;
+
+        private ConfigEntry<bool> showExtractions;
+        private ConfigEntry<bool> showSummary;
+
+        private ConfigEntry<float> maxDistance;
+        private ConfigEntry<int> fontSize;
 
         private bool espEnabled = true;
         private ValuableObject[] valuables = new ValuableObject[0];
+        private ExtractionPoint[] extractions = new ExtractionPoint[0];
         private float nextRefresh;
-        private GUIStyle labelStyle;
-        private GUIStyle shadowStyle;
 
         private void Awake()
         {
-            toggleKey = Config.Bind("General", "ToggleKey", Key.F1, "Key that turns the ESP on/off.");
-            showItems = Config.Bind("General", "ShowItems", true, "Draw valuables.");
-            showEnemies = Config.Bind("General", "ShowEnemies", true, "Draw enemies.");
-            maxDistance = Config.Bind("General", "MaxDistance", 150f, "Hide anything further away than this (metres).");
-            minItemValue = Config.Bind("General", "MinItemValue", 0, "Hide valuables worth less than this.");
+            menuKey = Config.Bind("Keys", "MenuKey", Key.Insert, "Opens the settings menu.");
+            toggleKey = Config.Bind("Keys", "ToggleKey", Key.F1, "Turns the ESP on/off.");
 
-            Logger.LogInfo($"{PluginName} {PluginVersion} loaded - press {toggleKey.Value} to toggle.");
+            showItems = Config.Bind("Items", "ShowItems", true, "Draw valuables.");
+            colorByValue = Config.Bind("Items", "ColorByValue", true, "Color valuables by how much they're worth.");
+            showFragile = Config.Bind("Items", "ShowFragile", true, "Mark valuables that break easily.");
+            minItemValue = Config.Bind("Items", "MinItemValue", 0, "Hide valuables worth less than this.");
+            fragileThreshold = Config.Bind("Items", "FragileThreshold", 70f, "Fragility (0-100) at or above which an item counts as fragile.");
+
+            showEnemies = Config.Bind("Enemies", "ShowEnemies", true, "Draw enemies.");
+            showEnemyHealth = Config.Bind("Enemies", "ShowEnemyHealth", true, "Show enemy health.");
+            showEnemyTips = Config.Bind("Enemies", "ShowEnemyTips", true, "Show a short tip under known enemies.");
+            offscreenArrows = Config.Bind("Enemies", "OffscreenArrows", true, "Arrows at the screen edge pointing to enemies you can't see.");
+            dangerWarning = Config.Bind("Enemies", "DangerWarning", true, "Warning at the top of the screen when an enemy is close.");
+            dangerDistance = Config.Bind("Enemies", "DangerDistance", 15f, "How close (metres) an enemy has to be for the warning.");
+
+            showExtractions = Config.Bind("World", "ShowExtractions", true, "Draw extraction points.");
+            showSummary = Config.Bind("World", "ShowSummary", true, "Show valuables/enemies/extractions left in the level.");
+
+            maxDistance = Config.Bind("Display", "MaxDistance", 150f, "Hide anything further away than this (metres).");
+            fontSize = Config.Bind("Display", "FontSize", 13, "Label text size.");
+
+            Logger.LogInfo($"{PluginName} {PluginVersion} loaded - {menuKey.Value} for menu, {toggleKey.Value} to toggle.");
         }
 
         private void Update()
         {
-            if (Keyboard.current != null && Keyboard.current[toggleKey.Value].wasPressedThisFrame)
+            Keyboard kb = Keyboard.current;
+            if (kb != null)
             {
-                espEnabled = !espEnabled;
+                if (rebinding != null)
+                {
+                    CheckRebind(kb);
+                }
+                else
+                {
+                    if (WasPressed(kb, menuKey.Value))
+                    {
+                        SetMenuOpen(!menuOpen);
+                    }
+                    if (WasPressed(kb, toggleKey.Value))
+                    {
+                        espEnabled = !espEnabled;
+                    }
+                }
             }
 
             if (Time.unscaledTime >= nextRefresh)
             {
                 nextRefresh = Time.unscaledTime + 1f;
                 valuables = FindObjectsByType<ValuableObject>(FindObjectsSortMode.None);
+                extractions = FindObjectsByType<ExtractionPoint>(FindObjectsSortMode.None);
+            }
+        }
+
+        private void LateUpdate()
+        {
+            if (!menuOpen)
+            {
+                return;
+            }
+
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+
+            if (InputManager.instance != null)
+            {
+                InputManager.instance.DisableAiming(0.1f);
+                InputManager.instance.DisableControlsExcept(0.1f, noKeys);
             }
         }
 
         private void OnGUI()
         {
-            if (!espEnabled || Event.current.type != EventType.Repaint)
-            {
-                return;
-            }
-
-            Camera cam = Camera.main;
-            if (cam == null)
-            {
-                return;
-            }
-
             SetupStyles();
 
-            if (showItems.Value)
+            if (espEnabled && Event.current.type == EventType.Repaint)
             {
-                foreach (ValuableObject valuable in valuables)
-                {
-                    if (valuable == null)
-                    {
-                        continue;
-                    }
-
-                    float value = ValueRef(valuable);
-                    if (value < minItemValue.Value)
-                    {
-                        continue;
-                    }
-
-                    string text = CleanName(valuable.name) + "\n$" + value.ToString("N0");
-                    DrawLabel(cam, valuable.transform.position, text, Color.green);
-                }
+                DrawEsp();
             }
 
-            if (showEnemies.Value && EnemyDirector.instance != null)
+            if (menuOpen)
             {
-                foreach (EnemyParent parent in EnemyDirector.instance.enemiesSpawned)
-                {
-                    if (parent == null || !SpawnedRef(parent))
-                    {
-                        continue;
-                    }
-
-                    Vector3 pos = parent.transform.position;
-                    Enemy enemy = EnemyRef(parent);
-                    if (enemy != null && enemy.CenterTransform != null)
-                    {
-                        pos = enemy.CenterTransform.position;
-                    }
-
-                    DrawLabel(cam, pos, parent.enemyName, Color.red);
-                }
+                menuRect = GUILayout.Window(MenuWindowId, menuRect, DrawMenu, PluginName + " " + PluginVersion, GUILayout.Width(320));
             }
         }
 
-        private void DrawLabel(Camera cam, Vector3 worldPos, string text, Color color)
+        private static bool WasPressed(Keyboard kb, Key key)
         {
-            float distance = Vector3.Distance(cam.transform.position, worldPos);
-            if (distance > maxDistance.Value)
-            {
-                return;
-            }
-
-            Vector3 vp = cam.WorldToViewportPoint(worldPos);
-            if (vp.z <= 0f)
-            {
-                return;
-            }
-
-            float x = vp.x * Screen.width;
-            float y = (1f - vp.y) * Screen.height;
-
-            string full = text + "\n" + distance.ToString("0") + "m";
-            Vector2 size = labelStyle.CalcSize(new GUIContent(full));
-            Rect rect = new Rect(x - size.x / 2f, y - size.y / 2f, size.x, size.y);
-
-            GUI.Label(new Rect(rect.x + 1f, rect.y + 1f, rect.width, rect.height), full, shadowStyle);
-            labelStyle.normal.textColor = color;
-            GUI.Label(rect, full, labelStyle);
-        }
-
-        private void SetupStyles()
-        {
-            if (labelStyle != null)
-            {
-                return;
-            }
-
-            labelStyle = new GUIStyle(GUI.skin.label);
-            labelStyle.alignment = TextAnchor.MiddleCenter;
-            labelStyle.fontSize = 13;
-            labelStyle.fontStyle = FontStyle.Bold;
-
-            shadowStyle = new GUIStyle(labelStyle);
-            shadowStyle.normal.textColor = Color.black;
-        }
-
-        private static string CleanName(string name)
-        {
-            return name.Replace("(Clone)", "").Replace("Valuable ", "").Trim();
+            return key != Key.None && kb[key].wasPressedThisFrame;
         }
     }
 }
