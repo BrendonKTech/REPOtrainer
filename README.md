@@ -21,15 +21,15 @@ Client-side only: nothing is sent over the network, and other players don't need
 
 ## Installing (players)
 
-1. Install **BepInEx 5** (x64) into your R.E.P.O. folder, either:
-   - with a mod manager (r2modman / Thunderstore Mod Manager), or
-   - by hand: download `BepInEx_win_x64_5.4.x` from the [BepInEx releases](https://github.com/BepInEx/BepInEx/releases) and extract it so that `winhttp.dll` sits next to `REPO.exe`.
-2. Launch the game once and quit. This creates the `BepInEx\plugins` and `BepInEx\config` folders.
-3. Download `REPOItemESP.dll` from [Releases](https://github.com/BrendonKTech/REPOtrainer/releases).
-4. Put it in `R.E.P.O\BepInEx\plugins\`.
-5. Start the game and load into a level. Press **Insert** for the menu, **F1** to toggle the ESP.
+1. Download `REPO-Item-ESP-v<version>.zip` from [Releases](https://github.com/BrendonKTech/REPOtrainer/releases). BepInEx is already included.
+2. Open your game folder: Steam → right-click R.E.P.O. → **Manage** → **Browse local files**.
+3. Unzip everything into that folder, so `Play REPO with ESP.exe` sits next to `REPO.exe`.
+4. Run **`Play REPO with ESP.exe`** to play with the ESP. Launching from Steam as usual gives you the normal game without the mod.
+5. In a level, press **Insert** for the menu and **F1** to toggle the ESP.
 
-To find your game folder: Steam → right-click R.E.P.O. → **Manage** → **Browse local files**.
+The launcher starts the game through Steam with the mod loader turned on for that one launch, then turns it off again.
+
+**Already use BepInEx or a mod manager?** Just put `BepInEx\plugins\REPOItemESP.dll` from the zip into your `BepInEx\plugins` folder (or your mod manager profile's). Skip the launcher.
 
 ---
 
@@ -109,6 +109,14 @@ dotnet build -c Release
 
 The output is `bin\Release\netstandard2.1\REPOItemESP.dll`. Copy it to `R.E.P.O\BepInEx\plugins\`.
 
+### Release zip
+
+```
+powershell -ExecutionPolicy Bypass -File .\package.ps1
+```
+
+This builds the plugin and the launcher, and writes `dist\REPO-Item-ESP-v<version>.zip`. BepInEx's loader files are copied from your own game install, with `doorstop_config.ini` set to `enabled = false`.
+
 ---
 
 ## How it works
@@ -126,6 +134,8 @@ The output is `bin\Release\netstandard2.1\REPOItemESP.dll`. Copy it to `R.E.P.O\
 | `Esp.cs` | All the drawing (labels, arrows, summary, danger warning) |
 | `Menu.cs` | The in-game settings window and key rebinding |
 | `EnemyTips.cs` | Enemy name → tip text |
+| `Launcher\Program.cs` | `Play REPO with ESP.exe`: turns BepInEx on for a single launch |
+| `package.ps1`, `Packaging\README.txt` | Builds the release zip and the readme that goes in it |
 
 To look through the game's code yourself, open `REPO_Data\Managed\Assembly-CSharp.dll` in [dnSpyEx](https://github.com/dnSpyEx/dnSpy) or [ILSpy](https://github.com/icsharpcode/ILSpy).
 

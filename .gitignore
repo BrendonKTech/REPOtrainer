@@ -7,3 +7,6 @@ obj/
 # local only
 Directory.Build.props
 NOTES.md
+
+# release output
+dist/
