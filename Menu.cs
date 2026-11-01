@@ -39,6 +39,7 @@ namespace REPOItemESP
             if (tab == 0)
             {
                 Toggle(showItems, "Show valuables");
+                Toggle(highlightItems, "Highlight through walls");
                 Toggle(colorByValue, "Color by value");
                 Toggle(showFragile, "Mark fragile items");
                 GUILayout.Label("Hide items under: $" + minItemValue.Value.ToString("N0"));
@@ -47,6 +48,7 @@ namespace REPOItemESP
             else if (tab == 1)
             {
                 Toggle(showEnemies, "Show enemies");
+                Toggle(highlightEnemies, "Highlight through walls");
                 Toggle(showEnemyHealth, "Show health");
                 Toggle(showEnemyTips, "Show tips");
                 Toggle(offscreenArrows, "Off-screen arrows");

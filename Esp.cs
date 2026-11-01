@@ -86,7 +86,17 @@ namespace REPOItemESP
                 itemsLeft++;
                 valueLeft += value;
 
-                if (!showItems.Value || value < minItemValue.Value)
+                if (value < minItemValue.Value)
+                {
+                    continue;
+                }
+
+                Color color = colorByValue.Value ? ValueColor(value) : Color.green;
+                if (highlightItems.Value)
+                {
+                    Highlight(cam, valuable, valuable.transform.position, color);
+                }
+                if (!showItems.Value)
                 {
                     continue;
                 }
@@ -97,7 +107,6 @@ namespace REPOItemESP
                     text += "\nFRAGILE";
                 }
 
-                Color color = colorByValue.Value ? ValueColor(value) : Color.green;
                 DrawLabel(cam, valuable.transform.position, text, color);
             }
         }
@@ -154,6 +163,10 @@ namespace REPOItemESP
                     dangerName = parent.enemyName;
                 }
 
+                if (highlightEnemies.Value)
+                {
+                    Highlight(cam, parent, pos, EnemyColor);
+                }
                 if (!showEnemies.Value)
                 {
                     continue;

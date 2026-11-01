@@ -4,6 +4,7 @@ A BepInEx mod for **R.E.P.O.** that shows valuables and enemies through walls, w
 
 - **Valuables**: name, current dollar value, and distance, colored by value (grey < $1k, green < $5k, yellow < $10k, orange $10k+), with a **FRAGILE** tag on items that break easily
 - **Enemies** (red): name, health, distance, and a short tip for some enemies
+- **Highlight through walls**: valuables (in their value color) and enemies (red) show as see-through shapes where a wall is in the way
 - **Off-screen arrows** at the edge of the screen pointing to enemies you can't see
 - **Danger warning** when an enemy gets close
 - **Extraction points**, showing which one is active and its goal
@@ -58,6 +59,8 @@ R.E.P.O\BepInEx\config\BrendonKTech.repo.itemesp.cfg
 | Enemies | `OffscreenArrows` | `true` | Arrows pointing to enemies off-screen. |
 | Enemies | `DangerWarning` | `true` | Warning when an enemy is close. |
 | Enemies | `DangerDistance` | `15` | Distance (metres) for the warning. |
+| Highlight | `HighlightItems` | `true` | Show valuables through walls. |
+| Highlight | `HighlightEnemies` | `true` | Show enemies through walls. |
 | World | `ShowExtractions` | `true` | Draw extraction points. |
 | World | `ShowSummary` | `true` | Show the level summary. |
 | Display | `MaxDistance` | `150` | Hide anything further away than this (metres). |
@@ -134,6 +137,7 @@ This builds the plugin and the launcher, and writes `dist\REPO-Item-ESP-v<versio
 | `Esp.cs` | All the drawing (labels, arrows, summary, danger warning) |
 | `Menu.cs` | The in-game settings window and key rebinding |
 | `EnemyTips.cs` | Enemy name → tip text |
+| `Highlight.cs` | Through-wall highlight (camera command buffer, ZTest Greater) |
 | `Launcher\Program.cs` | `Play REPO with ESP.exe`: turns BepInEx on for a single launch |
 | `package.ps1`, `Packaging\README.txt` | Builds the release zip and the readme that goes in it |
 

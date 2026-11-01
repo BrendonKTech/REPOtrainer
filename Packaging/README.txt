@@ -2,6 +2,7 @@ REPO Item ESP v{VERSION}
 ========================
 
 Shows valuables (with prices), enemies and extraction points through walls in R.E.P.O.
+Valuables and enemies are also highlighted through walls in color.
 Client-side only. Other players don't need it. Please only use it with people who know.
 
 

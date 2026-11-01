@@ -28,6 +28,9 @@ namespace REPOItemESP
         private ConfigEntry<bool> dangerWarning;
         private ConfigEntry<float> dangerDistance;
 
+        private ConfigEntry<bool> highlightItems;
+        private ConfigEntry<bool> highlightEnemies;
+
         private ConfigEntry<bool> showExtractions;
         private ConfigEntry<bool> showSummary;
 
@@ -56,6 +59,9 @@ namespace REPOItemESP
             offscreenArrows = Config.Bind("Enemies", "OffscreenArrows", true, "Arrows at the screen edge pointing to enemies you can't see.");
             dangerWarning = Config.Bind("Enemies", "DangerWarning", true, "Warning at the top of the screen when an enemy is close.");
             dangerDistance = Config.Bind("Enemies", "DangerDistance", 15f, "How close (metres) an enemy has to be for the warning.");
+
+            highlightItems = Config.Bind("Highlight", "HighlightItems", true, "Show the shape of valuables through walls, in their value color.");
+            highlightEnemies = Config.Bind("Highlight", "HighlightEnemies", true, "Show the shape of enemies through walls, in red.");
 
             showExtractions = Config.Bind("World", "ShowExtractions", true, "Draw extraction points.");
             showSummary = Config.Bind("World", "ShowSummary", true, "Show valuables/enemies/extractions left in the level.");
@@ -93,6 +99,7 @@ namespace REPOItemESP
                 nextRefresh = Time.unscaledTime + 1f;
                 valuables = FindObjectsByType<ValuableObject>(FindObjectsSortMode.None);
                 extractions = FindObjectsByType<ExtractionPoint>(FindObjectsSortMode.None);
+                rendererCache.Clear();
             }
         }
 
@@ -117,9 +124,14 @@ namespace REPOItemESP
         {
             SetupStyles();
 
-            if (espEnabled && Event.current.type == EventType.Repaint)
+            if (Event.current.type == EventType.Repaint)
             {
-                DrawEsp();
+                // gets drawn next frame
+                BeginHighlights();
+                if (espEnabled)
+                {
+                    DrawEsp();
+                }
             }
 
             if (menuOpen)
