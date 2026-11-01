@@ -1,4 +1,6 @@
+using System.IO;
 using BepInEx;
+using BepInEx.Bootstrap;
 using BepInEx.Configuration;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -8,9 +10,15 @@ namespace REPOItemESP
     [BepInPlugin(PluginGuid, PluginName, PluginVersion)]
     public partial class Plugin : BaseUnityPlugin
     {
-        public const string PluginGuid = "BrendonKTech.repo.itemesp";
+        private const string EspGuid = "BrendonKTech.repo.itemesp";
+#if TRAINER
+        public const string PluginGuid = "BrendonKTech.repo.trainer";
+        public const string PluginName = "REPO Trainer";
+#else
+        public const string PluginGuid = EspGuid;
         public const string PluginName = "REPO Item ESP";
-        public const string PluginVersion = "1.1.0";
+#endif
+        public const string PluginVersion = "1.2.0";
 
         private ConfigEntry<Key> menuKey;
         private ConfigEntry<Key> toggleKey;
@@ -42,8 +50,22 @@ namespace REPOItemESP
         private ExtractionPoint[] extractions = new ExtractionPoint[0];
         private float nextRefresh;
 
+        // trainer only, see Trainer.cs
+        partial void TrainerUpdate();
+        partial void DrawTrainerTab();
+
         private void Awake()
         {
+#if !TRAINER
+            // trainer has the esp built in
+            if (File.Exists(Path.Combine(Path.GetDirectoryName(Info.Location), "REPOTrainer.dll")))
+            {
+                Logger.LogWarning("REPOTrainer.dll is installed too and includes the ESP. This plugin will stay off.");
+                enabled = false;
+                return;
+            }
+#endif
+
             menuKey = Config.Bind("Keys", "MenuKey", Key.Insert, "Opens the settings menu.");
             toggleKey = Config.Bind("Keys", "ToggleKey", Key.F1, "Turns the ESP on/off.");
 
@@ -71,6 +93,18 @@ namespace REPOItemESP
 
             Logger.LogInfo($"{PluginName} {PluginVersion} loaded - {menuKey.Value} for menu, {toggleKey.Value} to toggle.");
         }
+
+#if TRAINER
+        // turn off the esp plugin if its also installed, old versions dont check
+        private void Start()
+        {
+            if (Chainloader.PluginInfos.TryGetValue(EspGuid, out PluginInfo esp) && esp.Instance != null && esp.Instance.enabled)
+            {
+                esp.Instance.enabled = false;
+                Logger.LogWarning("Turned off " + esp.Metadata.Name + " " + esp.Metadata.Version + ": the trainer already includes the ESP.");
+            }
+        }
+#endif
 
         private void Update()
         {
@@ -101,6 +135,8 @@ namespace REPOItemESP
                 extractions = FindObjectsByType<ExtractionPoint>(FindObjectsSortMode.None);
                 rendererCache.Clear();
             }
+
+            TrainerUpdate();
         }
 
         private void LateUpdate()

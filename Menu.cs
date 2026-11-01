@@ -9,7 +9,11 @@ namespace REPOItemESP
     public partial class Plugin
     {
         private const int MenuWindowId = 0x52455350;
+#if TRAINER
+        private static readonly string[] Tabs = { "Items", "Enemies", "World", "Settings", "Trainer" };
+#else
         private static readonly string[] Tabs = { "Items", "Enemies", "World", "Settings" };
+#endif
 
         private bool menuOpen;
         private int tab;
@@ -61,7 +65,7 @@ namespace REPOItemESP
                 Toggle(showExtractions, "Show extraction points");
                 Toggle(showSummary, "Show level summary");
             }
-            else
+            else if (tab == 3)
             {
                 GUILayout.Label("Max distance: " + maxDistance.Value.ToString("0") + "m");
                 maxDistance.Value = Mathf.Round(GUILayout.HorizontalSlider(maxDistance.Value, 10f, 300f) / 5f) * 5f;
@@ -70,6 +74,10 @@ namespace REPOItemESP
                 GUILayout.Space(6f);
                 KeyButton("Menu key", menuKey);
                 KeyButton("ESP toggle key", toggleKey);
+            }
+            else
+            {
+                DrawTrainerTab();
             }
 
             GUILayout.Space(6f);

@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- same files as the esp + Trainer.cs -->
+  <Import Project="..\GameReferences.props" />
+
+  <PropertyGroup>
+    <AssemblyName>REPOTrainer</AssemblyName>
+    <DefineConstants>$(DefineConstants);TRAINER</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\*.cs" />
+  </ItemGroup>
+
+</Project>
