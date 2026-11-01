@@ -18,14 +18,24 @@ Client-side only: nothing is sent over the network, and other players don't need
 
 > Please use it in solo games or with friends who know you're using it. It's meant as a learning and practice tool, not for getting an edge in public lobbies.
 
+### Trainer edition
+
+There's also a separate **REPO Trainer** download. It has everything above, plus a **Trainer** tab in the menu:
+
+- Infinite health and infinite stamina (they start off every launch)
+- Add or remove money
+- Add or remove the shop upgrades: health, stamina, sprint speed, grab strength, grab range, throw strength, extra jump, tumble launch
+
+The trainer options only work in **solo games or lobbies you host**. In someone else's lobby only the ESP works. Money and upgrades are saved to your save file like bought ones.
+
 ---
 
 ## Installing (players)
 
-1. Download `REPO-Item-ESP-v<version>.zip` from [Releases](https://github.com/BrendonKTech/REPOtrainer/releases). BepInEx is already included.
+1. Download `REPO-Item-ESP-v<version>.zip` (or `REPO-Trainer-v<version>.zip`) from [Releases](https://github.com/BrendonKTech/REPOtrainer/releases). BepInEx is already included.
 2. Open your game folder: Steam → right-click R.E.P.O. → **Manage** → **Browse local files**.
 3. Unzip everything into that folder, so `Play REPO with ESP.exe` sits next to `REPO.exe`.
-4. Run **`Play REPO with ESP.exe`** to play with the ESP. Launching from Steam as usual gives you the normal game without the mod.
+4. Run **`Play REPO with ESP.exe`** (or `Play REPO with Trainer.exe`) to play with the mod. Launching from Steam as usual gives you the normal game without the mod.
 5. In a level, press **Insert** for the menu and **F1** to toggle the ESP.
 
 The launcher starts the game through Steam with the mod loader turned on for that one launch, then turns it off again.
@@ -118,7 +128,7 @@ The output is `bin\Release\netstandard2.1\REPOItemESP.dll`. Copy it to `R.E.P.O\
 powershell -ExecutionPolicy Bypass -File .\package.ps1
 ```
 
-This builds the plugin and the launcher, and writes `dist\REPO-Item-ESP-v<version>.zip`. BepInEx's loader files are copied from your own game install, with `doorstop_config.ini` set to `enabled = false`.
+This builds both editions and the launcher, and writes `dist\REPO-Item-ESP-v<version>.zip` and `dist\REPO-Trainer-v<version>.zip`. To build only the trainer DLL: `dotnet build Trainer\REPOTrainer.csproj -c Release`. BepInEx's loader files are copied from your own game install, with `doorstop_config.ini` set to `enabled = false`.
 
 ---
 
@@ -138,8 +148,10 @@ This builds the plugin and the launcher, and writes `dist\REPO-Item-ESP-v<versio
 | `Menu.cs` | The in-game settings window and key rebinding |
 | `EnemyTips.cs` | Enemy name → tip text |
 | `Highlight.cs` | Through-wall highlight (camera command buffer, ZTest Greater) |
-| `Launcher\Program.cs` | `Play REPO with ESP.exe`: turns BepInEx on for a single launch |
-| `package.ps1`, `Packaging\README.txt` | Builds the release zip and the readme that goes in it |
+| `Trainer\Trainer.cs` | Trainer edition only: health, stamina, money, upgrades |
+| `GameReferences.props` | Game paths and DLL references shared by both editions |
+| `Launcher\Program.cs` | `Play REPO with ESP.exe` / `Play REPO with Trainer.exe`: turns BepInEx on for a single launch |
+| `package.ps1`, `Packaging\*.txt` | Builds the release zips and the readmes that go in them |
 
 To look through the game's code yourself, open `REPO_Data\Managed\Assembly-CSharp.dll` in [dnSpyEx](https://github.com/dnSpyEx/dnSpy) or [ILSpy](https://github.com/icsharpcode/ILSpy).
 
