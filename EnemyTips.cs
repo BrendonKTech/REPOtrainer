@@ -7,9 +7,9 @@ namespace REPOItemESP
     {
         private static readonly Dictionary<string, string> Tips = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
-            { "Huntsman", "Blind - hunts by sound. Stay still and quiet." },
-            { "Peeper", "Don't look at it." },
-            { "Apex Predator", "Harmless unless you hurt it. Leave it alone." },
+            { "Huntsman", "Blind, stay quiet" },
+            { "Peeper", "Dont look at it" },
+            { "Apex Predator", "Leave it alone" },
         };
 
         public static string Get(string enemyName)

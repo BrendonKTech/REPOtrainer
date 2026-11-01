@@ -7,10 +7,7 @@ using System.Threading;
 
 namespace REPOItemESPLauncher
 {
-    // Starts R.E.P.O. with BepInEx (and so the ESP) for one launch only.
-    // doorstop_config.ini is normally "enabled = false", so launching from Steam gives the plain game.
-    // This flips it to true, starts the game through Steam, waits until Doorstop has read the ini,
-    // then flips it back.
+    // turns bepinex on for one launch then back off
     internal static class Program
     {
         private const string SteamAppId = "3241660";
@@ -20,7 +17,7 @@ namespace REPOItemESPLauncher
 
         private static int Main()
         {
-            Console.Title = "REPO Item ESP";
+            Console.Title = "R.E.P.O. mod launcher";
 
             string gameDir = AppDomain.CurrentDomain.BaseDirectory;
             string ini = Path.Combine(gameDir, "doorstop_config.ini");
@@ -52,12 +49,12 @@ namespace REPOItemESPLauncher
 
             try
             {
-                Console.WriteLine("Starting R.E.P.O. with the ESP through Steam...");
+                Console.WriteLine("Starting R.E.P.O. with mods through Steam...");
                 Process.Start("steam://rungameid/" + SteamAppId);
 
                 if (WaitForLoad(log, launchedUtc))
                 {
-                    Console.WriteLine("Loaded. In a level: Insert = menu, F1 = toggle ESP.");
+                    Console.WriteLine("Loaded. In game: Insert = menu, F1 = toggle ESP.");
                     Thread.Sleep(3000);
                     return 0;
                 }
@@ -66,7 +63,7 @@ namespace REPOItemESPLauncher
             }
             finally
             {
-                // Always turn Doorstop back off so the next normal Steam launch is vanilla.
+                // always turn it back off
                 try
                 {
                     SetDoorstopEnabled(ini, false);
@@ -80,8 +77,7 @@ namespace REPOItemESPLauncher
             }
         }
 
-        // Done when BepInEx rewrites its log (it does so right after Doorstop loads it),
-        // or, as a fallback, once REPO.exe has been running long enough to have read the ini.
+        // wait for the bepinex log to update, or the game to be open for a bit
         private static bool WaitForLoad(string log, DateTime launchedUtc)
         {
             DateTime deadline = DateTime.UtcNow + LoadTimeout;
